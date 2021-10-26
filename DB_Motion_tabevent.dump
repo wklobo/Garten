@@ -1,0 +1,77 @@
+-- phpMyAdmin SQL Dump
+-- version 4.6.6deb5
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost:3306
+-- Erstellungszeit: 13. Sep 2021 um 17:29
+-- Server-Version: 10.3.29-MariaDB-0+deb10u1
+-- PHP-Version: 7.3.29-1~deb10u1
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Datenbank: `DB_Motion`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `tabEvent`
+--
+
+CREATE TABLE `tabEvent` (
+  `evKeyID` int(12) NOT NULL COMMENT 'Primärindex',
+  `evSaved` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'Speicher-Zeitpunkt',
+  `evEvent` text NOT NULL COMMENT 'Eventnummer',
+  `evDate` date NOT NULL DEFAULT '1900-01-01' COMMENT 'Ereignis-Datum',
+  `evTime` time NOT NULL DEFAULT '00:00:00' COMMENT 'Ereignis-Uhrzeit',
+  `evSize` int(18) NOT NULL DEFAULT -1 COMMENT 'Speicherbelegung',
+  `evRemark` tinytext DEFAULT NULL COMMENT 'Bemerkung'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Daten für Tabelle `tabEvent`
+--
+
+INSERT INTO `tabEvent` (`evKeyID`, `evSaved`, `evEvent`, `evDate`, `evTime`, `evSize`, `evRemark`) VALUES
+(1, '2021-09-13 10:00:44', 'event_0006', '2021-09-11', '09:46:37', 935894, 'JPGs=1 - AVIs=1 - Mem: 914 kB'),
+(6, '2021-09-13 10:06:50', 'event_0005', '2021-09-11', '09:43:02', 943040, 'JPGs=1 - AVIs=1 - Mem: 921 kB'),
+(7, '2021-09-13 10:06:50', 'event_0001', '2021-09-11', '09:52:19', 1671037, 'JPGs=2 - AVIs=2 - Mem: 1632 kB'),
+(8, '2021-09-13 10:06:50', 'event_0003', '2021-09-11', '09:53:14', 1900242, 'JPGs=2 - AVIs=2 - Mem: 1856 kB'),
+(9, '2021-09-13 10:06:50', 'event_0004', '1966-10-31', '15:13:21', 0, 'JPGs=0 - AVIs=0 - Mem: 0 kB'),
+(10, '2021-09-13 10:06:50', 'event_0002', '1966-10-31', '15:13:21', 0, 'JPGs=0 - AVIs=0 - Mem: 0 kB'),
+(11, '2021-09-13 15:11:55', 'event_0007', '2021-09-13', '12:07:39', 203994, 'JPGs=1 - AVIs=1 - Mem: 199 kB'),
+(12, '2021-09-13 15:11:55', 'event_0008', '2021-09-13', '17:11:31', 980818, 'JPGs=1 - AVIs=1 - Mem: 958 kB'),
+(13, '2021-09-13 15:11:55', 'event_0009', '2021-09-13', '17:11:54', 558555, 'JPGs=0 - AVIs=1 - Mem: 545 kB'),
+(14, '2021-09-13 15:11:55', 'event_0010', '2021-09-13', '17:10:56', 778583, 'JPGs=1 - AVIs=1 - Mem: 760 kB');
+
+--
+-- Indizes der exportierten Tabellen
+--
+
+--
+-- Indizes für die Tabelle `tabEvent`
+--
+ALTER TABLE `tabEvent`
+  ADD PRIMARY KEY (`evKeyID`),
+  ADD UNIQUE KEY `evEvent` (`evEvent`(12)) USING BTREE;
+
+--
+-- AUTO_INCREMENT für exportierte Tabellen
+--
+
+--
+-- AUTO_INCREMENT für Tabelle `tabEvent`
+--
+ALTER TABLE `tabEvent`
+  MODIFY `evKeyID` int(12) NOT NULL AUTO_INCREMENT COMMENT 'Primärindex', AUTO_INCREMENT=15;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

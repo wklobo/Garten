@@ -1,0 +1,79 @@
+#
+# Makefile:
+#	SqlMotion - Datenbank für Motion
+#	2016-01-25;  ./pi/motion
+#
+#DEBUG	= -g -O0
+DEBUG	= -O3
+CC	= gcc
+#INCLUDE	= -I/usr/include -I/usr/local/include -I/usr/include/mysql -I/home/pi/sendmail
+INCLUDE	=  -I/usr/include/mysql  
+#CFLAGS	= $(DEBUG) -Wall $(INCLUDE) -Winline -pipe -std=c99 -g
+CFLAGS	= -Wall $(INCLUDE) -std=c99
+
+LDLIBS   = -L/usr/local/lib -lmysqlclient -lpigpio -lz -lm -lrt -ldl
+#LDFLAGS   = -lmysqlclient
+#LDLIBS    = -lwiringPi -lwiringPiDev  -llibpigpio.so  -llibpigpiod_if.so -lm 
+
+# Should not alter anything below this line
+############################################################################### /usr/local/lib/libpigpio.so  -lpigpio_if 
+
+SRC	=	sqlmotion.c motLED.c /home/pi/sendmail/sendMail.c
+
+OBJ	=	$(SRC:.c=.o)
+
+HDR	=	sqlmotion.h version.h motLED.h /home/pi/sendmail/sendMail.h
+
+EXECUTABLE=SqlMotion
+
+all: $(SRC) $(HDR) $(EXECUTABLE)  
+	
+#	prog: $(OBJ)
+#        $(CC) $(CFLAGS) -o prog $(OBJ) $(LDFLAGS)
+
+#%.o: %.c
+#        $(CC) $(CFLAGS) -c $<
+	
+$(EXECUTABLE): $(OBJ) Makefile 
+	$(CC) -o $@  $(OBJ) $(LDLIBS) 
+	./version.py
+ 
+#.c.o: Makefile  
+%.o: %.c %.h  Makefile $(HDR)
+	@echo [CC] $<
+	@$(CC) -c $(CFLAGS) $< -o $@
+
+
+
+
+
+#[CC] sqlmotion.c
+#[CC] /home/pi/sendmail/sendMail.c
+#gcc -o SqlMotion  sqlmotion.o /home/pi/sendmail/sendMail.o -lmysqlclient # -lwiringPi -lwiringPiDev -lm
+#./version.py
+##define BUILD 95
+
+
+
+
+
+
+fifo: 
+	@echo "[Fifo]"
+	gcc -o Fifo fifomotion.c  motLED.c  /home/pi/sendmail/sendMail.c $(LDFLAGS) $(LDLIBS)
+	./version.py
+     
+     
+clean:
+	@echo "[Clean]"
+	@rm -f $(OBJ) *~ core tags $(BINS)
+
+tags:	$(SRC)
+	@echo [ctags]
+	@ctags $(SRC)
+
+depend:
+	makedepend -Y $(SRC)
+
+# DO NOT DELETE
+

@@ -1,9 +1,9 @@
-//*********************************************************************************************//
+//********** Kamera ***************************************************************************//
 //*                                                                                           *//
 //* File:          common.h                                                                   *//
 //* Author:        Wolfgang Keuch                                                             *//
 //* Creation date: 2021-04-18;                                                                *//
-//* Last change:   2021-10-24 - 17:35:38                                                     *//
+//* Last change:   2021-11-07 - 10:42:08                                                      *//
 //* Description:   Hilfsfunktionen und  Vereinbarungen zwischen den Programmen                *//
 //*                                                                                           *//
 //* Copyright (C) 2019-21 by Wolfgang Keuch                                                   *//
@@ -34,8 +34,8 @@
 
 // Aufbewahrungsdauer Filme/Bilder
 // -------------------------------
-#define SEC  1000 /* -- msec */
-#define STD   60*60 /* -- min  */
+#define SEC   1000   		/* -- msec */
+#define STD  (60*60) 		/* -- min  */
 #define SOFORT_h        0
 #define KURZ_h          1
 #define MITTEL_h       25             /* Aufbewahrungsdauer [h]: Eine Tag + 1 Std  */
@@ -72,8 +72,16 @@
 #define FDIR          "/home/pi/Garten/aux"
 #define FIFO          "/home/pi/Garten/aux/MOTION.FIFO"
 #define FPID          "/home/pi/Garten/aux/%s.pid"
-#define SOURCE        "/home/pi/Garten/pix/"
+#define SOURCE1       "/pix/"
+#define SOURCE2       "/usb/"
 #define DESTINATION   "/media/Garten/"    			/* = 'DISKSTATION/surveillance'/... */
+
+enum Src
+{
+	UNDEF=-1,
+	PIX,
+	USB
+};
 
 // allgemeine Log-Datei
 // --------------------
@@ -94,30 +102,32 @@
 
 // LED-Steuerung (Ersatz für motLED.c)
 // -------------------------------------
-#define LED_EIN      0
-#define LED_AUS      1
-#define LED_HELL     1                    /* IR-Lampen */
+#define LED_EIN      1
+#define LED_AUS      0
+#define LED_HELL     1             		/* IR-Lampen */
 #define LED_DUNKEL   0
+#define BLINK        111             	/* msec */
 
 // Pin-Nummerierung: WiringPi
 // --------------------------
-#define LED_ROT       1      /* Pin  8  */
-#define LED_GELB      6      /* Pin 22  */
-#define LED_GRUEN    16      /* Pin 10  */
-#define LED_BLAU     15      /* Pin 12  */
-#define LED_GRUEN1   11      /* Pin 28  */
-#define LED_BLAU1    10      /* Pin 26  */
-#define LAMP_IRRIGHT  2  /* Pin 13 - IR-Lampe rechts */ // /home/pi/Garten/Pin/Pin 16 0
-#define LAMP_IRLEFT   0  /* Pin 11 - IR-Lampe links  */
+#define LED_rt       4      	/* Pin 16  */
+#define LED_ge1      5      	/* Pin 18  */
+#define LED_gn1    	16      	/* Pin 10  */
+#define LED_bl1     15      	/* Pin  8  */
+#define LED_ge2      6      	/* Pin 22  */
+#define LED_gn2   	10      	/* Pin 24  */
+#define LED_bl2    	11    		/* Pin 26  */
+//#define LAMP_IRRIGHT  2  /* Pin 13 - IR-Lampe rechts */ // /home/pi/Garten/Pin/Pin 16 0
+//#define LAMP_IRLEFT   0  /* Pin 11 - IR-Lampe links  */
 
 // Pin-Nummerierung: WiringPi - alt Vogel
 // --------------------------------------
-//#define LED_ROT      15  /* Pin  8  */
-//#define LED_GELB     16  /* Pin 10  */
-//#define LED_GRUEN     1  /* Pin 12  */
-//#define LED_BLAU      4  /* Pin 16  */
-//#define LED_GRUEN1   24  /* Pin 35  */
-//#define LED_BLAU1    25  /* Pin 37  */
+//#define LED_rt      15  /* Pin  8  */
+//#define LED_ge1     16  /* Pin 10  */
+//#define LED_gn1     1  /* Pin 12  */
+//#define LED_bl1      4  /* Pin 16  */
+//#define LED_gn2   24  /* Pin 35  */
+//#define LED_bl2    25  /* Pin 37  */
 //#define LAMP_IRRIGHT  2  /* Pin 13 - IR-Lampe rechts */ // /home/pi/Garten/Pin/Pin 16 0
 //#define LAMP_IRLEFT   0  /* Pin 11 - IR-Lampe links  */
 

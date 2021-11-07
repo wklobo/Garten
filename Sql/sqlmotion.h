@@ -1,9 +1,9 @@
- //**************************************************************************//
+ //************ Kamera ******************************************************//
 //*                                                                         *//
 //* File:          sqlmotion.h                                              *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2014-07-20  --  2016-02-18                               *//
-//* Last change:   2021-10-24 - 14:00:28                                    *//
+//* Last change:   2021-11-07 - 11:03:578                                    *//
 //* Description:   Weiterverarbeitung von 'motion'-Dateien:                 *//
 //*                Event ermitteln, daraus ein Verzeichnis erstellen,       *//
 //*                zugehörige Dateien in dieses Verzeichnis verschieben     *//
@@ -28,6 +28,8 @@
 #define THISUSER            "root"
 #define THISPW              "geheim"
 #define THISHOST            "localhost"
+
+#define EVENTNUMMER         "/home/pi/Garten/aux/EventNummer.save"
 
 //--
 //-- Tabellenstruktur für Tabelle `tabEvent`

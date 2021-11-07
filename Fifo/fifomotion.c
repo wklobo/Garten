@@ -3,7 +3,7 @@
 //* File:          fifomotion.c                                             *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2014-08-23  --  2016-02-04;                              *//
-//* Last change:   2021-10-24 - 17:18:20                                    *//
+//* Last change:   2021-11-01 - 12:25:39                                    *//
 //* Description:   Weiterverarbeitung von 'motion'-Dateien:                 *//
 //*                kopieren auf einen anderen Rechner                       *//
 //*                                                                         *//
@@ -133,10 +133,10 @@ void showMain_Error( char* Message, const char* Func, int Zeile)
   sprintf( ErrText, "%s()#%d @%s in %s: \"%s\"", Func, Zeile, __NOW__, __FILE__, Fehler);
 
   printf("    -- Fehler -->  %s\n", ErrText);   // lokale Fehlerausgabe
-  digitalWrite (LED_GELB,   LED_AUS);
-  digitalWrite (LED_GRUEN,  LED_AUS);
-  digitalWrite (LED_BLAU,   LED_AUS);
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_ge1,   LED_AUS);
+  digitalWrite (LED_gn1,   LED_AUS);
+  digitalWrite (LED_bl1,   LED_AUS);
+  digitalWrite (LED_rt,    LED_EIN);
 
   {// --- Log-Ausgabe ---------------------------------------------------------
     char LogText[ZEILE];  sprintf(LogText,
@@ -166,7 +166,7 @@ int Error_NonFatal( char* Message, const char* Func, int Zeile)
 
   DEBUG("   -- Fehler -->  %s\n", ErrText);     // lokale Fehlerausgabe
 
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_rt,    LED_EIN);
   ErrorFlag = time(0) + BRENNDAUER;             // Steuerung rote LED
 
   if (errsv == 24)                              // 'too many open files' ...
@@ -345,9 +345,9 @@ int remFile(const char* Dateiname, int maxAlter)
     long Alter = (time(NULL) - FcDatum);        // Alter der Datei [sec]
 
     { // --- Debug-Ausgaben ------------------------------------------
-      int std = Alter / 3600;
-      int min = (Alter % 3600) / 60;
-      int sec = ((Alter % 3600) % 60);
+      int std = Alter / STD;
+      int min = (Alter % STD) / 60;
+      int sec = ((Alter % STD) % 60);
       #define MELDUNG   "       %s()#%d: '%s':\n           "\
       "                                   Alter %3d:%02d:%02d Std - max: %d Std\n"
       DEBUG_d(MELDUNG, __FUNCTION__, __LINE__,
@@ -424,9 +424,9 @@ int remFolder(const char* Foldername, int maxAlter)
       #define MELDUNG   "     %s()#%d: '%s':\n              "\
       "                       Alter %3ld:%02ld:%02ld Std - max: %d Std\n"
       DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, Foldername,
-                                      Alter / 3600,
-                                     (Alter % 3600) / 60,
-                                    ((Alter % 3600) % 60), maxAlter );
+                                      Alter / STD,
+                                     (Alter % STD) / 60,
+                                    ((Alter % STD) % 60), maxAlter );
       #undef MELDUNG
     } // ---------------------------------------------------------------
 
@@ -1251,43 +1251,42 @@ int main(int argc, char *argv[])
     }
     sprintf(LogText,"    %s()#%d: Fifo OK: '%s'",  __FUNCTION__, __LINE__, FIFO);
     MYLOG(LogText);
-	}
+  }
 
   // Ist GPIO klar?
   // --------------
   {
     wiringPiSetup();
-    pinMode (LED_ROT,    OUTPUT);
-    pinMode (LED_GELB,   OUTPUT);
-    pinMode (LED_GRUEN,  OUTPUT);
-    pinMode (LED_BLAU,   OUTPUT);
-    pullUpDnControl (LED_ROT, PUD_UP) ;
-    pullUpDnControl (LED_GELB, PUD_UP) ;
-    pullUpDnControl (LED_GRUEN, PUD_UP) ;
-    pullUpDnControl (LED_BLAU, PUD_UP) ;
-    #define ANZEIT  44 /* msec */
-    digitalWrite (LED_ROT,   LED_EIN);
-    delay(3*ANZEIT);
-    digitalWrite (LED_ROT,   LED_AUS);
+    pinMode (LED_rt,   OUTPUT);
+    pinMode (LED_ge1,  OUTPUT);
+    pinMode (LED_gn1,  OUTPUT);
+    pinMode (LED_bl1,  OUTPUT);
+    pullUpDnControl (LED_rt,  PUD_UP) ;
+    pullUpDnControl (LED_ge1, PUD_UP) ;
+    pullUpDnControl (LED_gn1, PUD_UP) ;
+    pullUpDnControl (LED_bl1, PUD_UP) ;
+    #define ANZEIT  128 /* msec */
+    digitalWrite (LED_rt,   LED_EIN);
     for (int ix=0; ix < 12; ix++)
     {
-      digitalWrite (LED_GELB,   LED_EIN);
+      digitalWrite (LED_gn1,   LED_EIN);
       delay(ANZEIT);
-      digitalWrite (LED_GELB,   LED_AUS);
-      digitalWrite (LED_GRUEN,  LED_EIN);
+      digitalWrite (LED_gn1,   LED_AUS);
+      digitalWrite (LED_bl1,   LED_EIN);
       delay(ANZEIT);
-      digitalWrite (LED_GRUEN,  LED_AUS);
-      digitalWrite (LED_BLAU,   LED_EIN);
+      digitalWrite (LED_bl1,   LED_AUS);
+      digitalWrite (LED_ge1,   LED_EIN);
       delay(ANZEIT);
-      digitalWrite (LED_BLAU,   LED_AUS);
+      digitalWrite (LED_ge1,   LED_AUS);
     }
+    digitalWrite (LED_rt,   LED_AUS);
     DEBUG(">> %s()#%d @ %s ----- GPIO OK -------\n", __FUNCTION__, __LINE__, __NOW__);
     { // --- Log-Ausgabe ---------------------------------------------------------
       char LogText[ZEILE];  sprintf(LogText, "    ----- GPIO OK -------");
       MYLOG(LogText);
     } // ------------------------------------------------------------------------
-	}
-	
+  }
+
 
   { // Bereitmeldung per Mail ---------------------------------------
     // -----------------------
@@ -1322,7 +1321,7 @@ int main(int argc, char *argv[])
   // ------------------------------------------------
   {
     DEBUG(">> %s()#%d @ %s\n", __FUNCTION__, __LINE__, __NOW__);
-    digitalWrite (LED_GRUEN, LED_EIN);
+//    digitalWrite (LED_gn1, LED_EIN);
     fd = open (FIFO, O_RDONLY);                   // Empfänger liest nur aus dem FIFO
     if (fd == -1)
     {
@@ -1369,16 +1368,16 @@ int main(int argc, char *argv[])
       #undef MELDUNG
     } // ------------------------------------------------------------------------------------
     ShowReady = false;
-    digitalWrite (LED_BLAU, LED_AUS);
-    digitalWrite (LED_GRUEN, LED_EIN);
+    digitalWrite (LED_bl1, LED_AUS);
+//    digitalWrite (LED_gn1, LED_EIN);
 
     if ( read(fd, puffer, BUFFER) )             // == > auf Aufträge von 'motion' warten
     {
       ShowReady = true;
       Startzeit(T_GESAMT);                      // Zeitmessung starten
       syslog(LOG_NOTICE, ">>> %s()#%d: <###---    neuer Auftrag    ---###>", __FUNCTION__, __LINE__);
-      digitalWrite (LED_BLAU, LED_EIN);
-      digitalWrite (LED_GRUEN, LED_AUS);
+      digitalWrite (LED_bl1, LED_EIN);
+//      digitalWrite (LED_gn1, LED_AUS);
       newFiles   = 0;                           // neue Dateien
       newFolders = 0;                           // neue Verzeichnisse
       delFiles   = 0;                           // gelöschte Dateien
@@ -1401,7 +1400,7 @@ int main(int argc, char *argv[])
       }
       long Items = FileTransfer(puffer, DESTINATION);     // Daten einlesen
       { // --- Debug-Ausgaben ----------------------------------------------------------------
-      	char target[] = "target";
+        char target[] = "target";
         #define MELDUNG   "\n>>> %s()#%d: Items=%ld\n"
         DEBUG(MELDUNG, __FUNCTION__, __LINE__,Items);
         #undef MELDUNG
@@ -1413,7 +1412,7 @@ int main(int argc, char *argv[])
         DEBUG( MELDUNG, __FUNCTION__, __LINE__, fldCount,(fldCount>1 ? "se" : ""),
                                                 aviCount,(aviCount>1 ? "e" : ""),
                                                 jpgCount,(jpgCount>1 ? "er" : ""),
-                                                SOURCE, target, Zwischenzeit(T_GESAMT));
+                                                SOURCE1, target, Zwischenzeit(T_GESAMT));
         #undef MELDUNG
         SYSLOG(LOG_NOTICE, ">>> %s()#%d: %d Verzeichnis%s, %d Film%s, %d Bild%s kopiert in %ld msec",
                         __FUNCTION__, __LINE__, fldCount,(fldCount>1 ? "se" : ""),
@@ -1482,7 +1481,7 @@ int main(int argc, char *argv[])
       } // ------------------------------------------------------------------------
 
 
-      digitalWrite (LED_GELB, LED_AUS);             // wurde von SqlMotion eingeschaltet!
+//      digitalWrite (LED_ge1, LED_AUS);             // wurde von SqlMotion eingeschaltet!
     } // ======== Auftrag erledigt =================================================================
 
 
@@ -1544,9 +1543,9 @@ int main(int argc, char *argv[])
       blink++;
       if (blink % 7 == 0)
       {
-        digitalWrite (LED_GRUEN, LED_AUS);
-        delay(100);
-        digitalWrite (LED_GRUEN, LED_EIN);
+//        digitalWrite (LED_gn1, LED_AUS);
+//        delay(100);
+//        digitalWrite (LED_gn1, LED_EIN);
       }
     }
 
@@ -1559,7 +1558,7 @@ int main(int argc, char *argv[])
       { // wenn Zeit abgelaufen
         // --------------------
         ErrorFlag = 0;
-        digitalWrite (LED_ROT, LED_AUS);
+        digitalWrite (LED_rt, LED_AUS);
       }
     }
 
@@ -1571,7 +1570,7 @@ int main(int argc, char *argv[])
 
 //  // Fehler-Mail abschicken (hier nutzlos)
 //  // -------------------------------------
-//  digitalWrite (LED_ROT, LED_EIN);
+//  digitalWrite (LED_rt, LED_EIN);
 //  sprintf(Logtext, ">> %s()#%d: Error %s ---> '%s' OK\n",__FUNCTION__, __LINE__, PROGNAME, "lastItem");
 //  syslog(LOG_NOTICE, "%s: %s", __FIFO__, Logtext);
 //

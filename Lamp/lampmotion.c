@@ -1,9 +1,9 @@
-//***************************************************************************//
+//********** Kamera *********************************************************//
 //*                                                                         *//
 //* File:          lampmotion.c                                             *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2021-04-05;                                              *//
-//* Last change:   2021-10-24 - 13:46:12                                    *//
+//* Last change:   2021-11-07 - 10:41:55                                    *//
 //* Description:   Nistkastenprogramm - ergänzt 'fifomotion':               *//
 //*                Steuerung der Infrarot-Lampen                            *//
 //*                Verwaltung der Umwelt-Sensoren                           *//
@@ -129,9 +129,9 @@ void showMain_Error( char* Message, const char* Func, int Zeile)
   sprintf( ErrText, "%s()#%d @%s in %s: \"%s\"", Func, Zeile, __NOW__, __FILE__, Fehler);
 
   printf("    -- Fehler -->  %s\n", ErrText);   // lokale Fehlerausgabe
-  digitalWrite (LED_GRUEN1,  LED_AUS);
-  digitalWrite (LED_BLAU1,   LED_AUS);
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_gn2,  LED_AUS);
+  digitalWrite (LED_bl2,   LED_AUS);
+  digitalWrite (LED_rt,    LED_EIN);
 
   finish_with_Error(ErrText);                   // Fehlermeldung ausgeben
 }
@@ -155,7 +155,7 @@ int Error_NonFatal( char* Message, const char* Func, int Zeile)
 
   DEBUG("   -- Fehler -->  %s\n", ErrText);     // lokale Fehlerausgabe
 
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_rt,    LED_EIN);
   ErrorFlag = time(0) + BRENNDAUER;             // Steuerung rote LED
 
   if (errsv == 24)                              // 'too many open files' ...
@@ -761,7 +761,7 @@ int CommandMessage(char* Topic, char* Payload)
     switch (DeviceID)
     {
       case D_IRLAMPE_RECHTS:
-        digitalWrite (LAMP_IRRIGHT, Schalter);
+//        digitalWrite (LAMP_IRRIGHT, Schalter);
         Automatic = false;
         DEBUG(">> %s---%s()#%d: LAMP_IRRIGHT = %s(%d); AckRequest=%d\n",
                          __NOW__, __FUNCTION__, __LINE__, Schaltwert, Schalter, (int)AckRequest);
@@ -776,7 +776,7 @@ int CommandMessage(char* Topic, char* Payload)
         break;
 
       case D_IRLAMPE_LINKS:
-        digitalWrite (LAMP_IRLEFT, Schalter);
+//        digitalWrite (LAMP_IRLEFT, Schalter);
         Automatic = false;
         DEBUG(">> %s---%s()#%d: LAMP_IRLEFT = %s(%d); AckRequest=%d\n",
                          __NOW__, __FUNCTION__, __LINE__, Schaltwert, Schalter, (int)AckRequest);
@@ -914,26 +914,26 @@ int main(int argc, char *argv[])
   // --------------
   {
     wiringPiSetup();
-    pinMode (LED_GRUEN1,   OUTPUT);
-    pinMode (LED_BLAU1,    OUTPUT);
-    pinMode (LAMP_IRRIGHT, OUTPUT);
-    pinMode (LAMP_IRLEFT,  OUTPUT);
+    pinMode (LED_gn2,   OUTPUT);
+    pinMode (LED_bl2,    OUTPUT);
+//    pinMode (LAMP_IRRIGHT, OUTPUT);
+//    pinMode (LAMP_IRLEFT,  OUTPUT);
     #define ANZEIT  44 /* msec */
     for (int ix=0; ix < 12; ix++)
     {
-      digitalWrite (LED_GRUEN1,   LED_EIN);
-      digitalWrite (LAMP_IRRIGHT, LED_HELL);
+      digitalWrite (LED_gn2,   LED_EIN);
+//      digitalWrite (LAMP_IRRIGHT, LED_HELL);
       delay(ANZEIT);
-      digitalWrite (LED_GRUEN1,   LED_AUS);
-      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
-      digitalWrite (LED_BLAU1,    LED_EIN);
-      digitalWrite (LAMP_IRLEFT,  LED_HELL);
+      digitalWrite (LED_gn2,   LED_AUS);
+//      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
+      digitalWrite (LED_bl2,    LED_EIN);
+//      digitalWrite (LAMP_IRLEFT,  LED_HELL);
       delay(ANZEIT);
-      digitalWrite (LED_BLAU1,    LED_AUS);
-      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
+      digitalWrite (LED_bl2,    LED_AUS);
+//      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
     }
-    digitalWrite (LAMP_IRRIGHT,   LED_DUNKEL);
-    digitalWrite (LAMP_IRLEFT,    LED_DUNKEL);
+//    digitalWrite (LAMP_IRRIGHT,   LED_DUNKEL);
+//    digitalWrite (LAMP_IRLEFT,    LED_DUNKEL);
     DEBUG(">> %s()#%d @ %s ----- GPIO OK -------\n", __FUNCTION__, __LINE__, __NOW__);
     { // --- Log-Ausgabe ---------------------------------------------------------
       char LogText[ZEILE];  sprintf(LogText, "    GPIO OK !");
@@ -994,7 +994,7 @@ int main(int argc, char *argv[])
   }
 
 
-  digitalWrite (LED_BLAU1, LED_EIN);
+  digitalWrite (LED_bl2, LED_EIN);
 
   // MQTT starten
   // --------------
@@ -1101,10 +1101,10 @@ int main(int argc, char *argv[])
 
   syslog(LOG_NOTICE, "--- Init done ---");
 
-  digitalWrite (LED_BLAU1, LED_AUS);
-  digitalWrite (LED_GRUEN1, LED_EIN);
-  digitalWrite (LAMP_IRRIGHT, LED_HELL);
-  digitalWrite (LAMP_IRLEFT,  LED_HELL);
+  digitalWrite (LED_bl2, LED_AUS);
+  digitalWrite (LED_gn2, LED_EIN);
+//  digitalWrite (LAMP_IRRIGHT, LED_HELL);
+//  digitalWrite (LAMP_IRLEFT,  LED_HELL);
   Automatic = true;
 
   DEBUG("\n");
@@ -1296,14 +1296,14 @@ int main(int argc, char *argv[])
       if (msg)
         lcnt = 3;
     }
-    digitalWrite (LED_BLAU1, (--lcnt > 0) ? LED_EIN : LED_AUS);
+    digitalWrite (LED_bl2, (--lcnt > 0) ? LED_EIN : LED_AUS);
     static int blink = (STD*4)-20;
     blink++;
     if (blink % 5 == 0)
     {
-      digitalWrite (LED_GRUEN1, LED_AUS);
+      digitalWrite (LED_gn2, LED_AUS);
       delay(100);
-      digitalWrite (LED_GRUEN1, LED_EIN);
+      digitalWrite (LED_gn2, LED_EIN);
     }
     
     if (!Automatic)
@@ -1315,17 +1315,27 @@ int main(int argc, char *argv[])
     { // Normalbetrieb (Automatic!)
       // --------------------------
       DEBUG_2(">> %s-%s()#%d\n",  __NOW__, __FUNCTION__, __LINE__);
-      digitalWrite (LAMP_IRRIGHT, LED_HELL);
-      digitalWrite (LAMP_IRLEFT,  LED_HELL);
-      if (((blink % (STD*4)) == 0))     // entspricht ca. 1:07 Stunden
+//      digitalWrite (LAMP_IRRIGHT, LED_HELL);
+//      digitalWrite (LAMP_IRLEFT,  LED_HELL);
+//      if (((blink % (STD*4)) == 0))     // entspricht ca. 1:07 Stunden
+      	
+   		time_t tnow;
+  		time(&tnow);
+  		if ((tnow % STD) == 0)							// zur vollen Stunde
+     	
+      	
       { // mit IR-Lampen Photo auslösen
         // ----------------------------
         DEBUG_2(">> %s-%s()#%d\n",  __NOW__, __FUNCTION__, __LINE__);
-        digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
-        digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
+//        digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
+//        digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
+        { // --- Log-Ausgabe ---------------------------------------------------------
+          char LogText[ZEILE];  sprintf(LogText, "    --- Probeaufnahme: %ld mod %d = %ld", tnow, STD, (tnow % STD));
+          MYLOG(LogText);
+        } // ------------------------------------------------------------------------
         delay(10*SEC);
-        digitalWrite (LAMP_IRRIGHT, LED_HELL);
-        digitalWrite (LAMP_IRLEFT,  LED_HELL);
+//        digitalWrite (LAMP_IRRIGHT, LED_HELL);
+//        digitalWrite (LAMP_IRLEFT,  LED_HELL);
         DEBUG_2(">> %s-%s()#%d\n",  __NOW__, __FUNCTION__, __LINE__);
       }
     }
@@ -1333,8 +1343,8 @@ int main(int argc, char *argv[])
     { // Nachts ist Ruhe!
       // -----------------
       DEBUG_2(">> %s-%s()#%d\n",  __NOW__, __FUNCTION__, __LINE__);
-      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
-      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
+//      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
+//      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
     }
 
     if (ErrorFlag > 0)
@@ -1344,7 +1354,7 @@ int main(int argc, char *argv[])
       { // wenn Zeit abgelaufen
         // --------------------
         ErrorFlag = 0;
-        digitalWrite (LED_ROT, LED_AUS);
+        digitalWrite (LED_rt, LED_AUS);
       }
     }
 
@@ -1358,7 +1368,7 @@ int main(int argc, char *argv[])
 //  // ----------------------
 //  char MailBody[BODYLEN] = {'\0'};
 //  char Logtext[ZEILE];
-//  digitalWrite (LED_ROT, LED_EIN);
+//  digitalWrite (LED_rt, LED_EIN);
 //  sprintf(Logtext, ">> %s()#%d: Error %s ---> '%s' OK\n",__FUNCTION__, __LINE__, PROGNAME, "lastItem");
 //  syslog(LOG_NOTICE, "%s: %s", __LAMP__, Logtext);
 //

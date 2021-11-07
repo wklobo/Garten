@@ -213,10 +213,10 @@ void showbme280_Error( char* Message, const char* Func, int Zeile)
   sprintf( ErrText, "%s()#%d @%s in %s: \"%s\"", Func, Zeile, __NOW__, __FILE__, Fehler);
 
   printf("    -- Fehler -->  %s\n", ErrText);   // lokale Fehlerausgabe
-  digitalWrite (LED_GELB,   LED_AUS);
-  digitalWrite (LED_GRUEN,  LED_AUS);
-  digitalWrite (LED_BLAU,   LED_AUS);
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_ge1,   LED_AUS);
+  digitalWrite (LED_gn1,  LED_AUS);
+  digitalWrite (LED_bl1,   LED_AUS);
+  digitalWrite (LED_rt,    LED_EIN);
 
   finish_with_Error(ErrText);                   // Fehlermeldung ausgeben
 }

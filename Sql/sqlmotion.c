@@ -1,14 +1,14 @@
-//***************************************************************************//
+//*********** Kamera ********************************************************//
 //*                                                                         *//
 //* File:          sqlmotion.c                                              *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2014-07-20  --  2016-02-18                               *//
-//* Last change:   2021-10-26 - 13:37:18                                    *//
+//* Last change:   2021-11-07 - 11:04:08                                    *//
 //* Description:   Weiterverarbeitung von 'motion'-Dateien:                 *//
 //*                Event ermitteln, daraus ein Verzeichnis erstellen,       *//
 //*                zugehörige Dateien in dieses Verzeichnis verschieben     *//
 //*                                                                         *//
-//* Copyright (C) 2014-21 by Wolfgang Keuch                                 *//
+//* Copyright (C) 2014-22 by Wolfgang Keuch                                 *//
 //*                                                                         *//
 //* Kompilation:                                                            *//
 //*    make                                                                 *//
@@ -26,7 +26,7 @@
 #define __SQLMOTION_DEBUG__d   false     /* Datenbanken */
 #define __SQLMOTION_DEBUG__1   false
 #define __SQLMOTION_DEBUG__2   false
-#define __SQLMOTION_DEBUG__z   false
+#define __SQLMOTION_DEBUG__z   true
 
 #include "./version.h"
 #include "./sqlmotion.h"
@@ -57,6 +57,8 @@
 // statische Variable
 // --------------------
 static time_t ErrorFlag = 0;          // Steuerung rote LED
+static int myPID;                     // Prozess-ID
+static int EventNummer = 0;						// laufende Ereignis-Nummer
 
 // Breakpoints
 // -----------
@@ -78,31 +80,31 @@ char MailBody[BODYLEN];
 //// Log-Ausgabe
 //// -----------
 #if __SQLMOTION_MYLOG__
-#define MYLOG(...)  MyLog(PROGNAME, __FUNCTION__, __LINE__, __VA_ARGS__)
+ #define MYLOG(...)  MyLog(PROGNAME, __FUNCTION__, __LINE__, __VA_ARGS__)
 #else
-#define MYLOG(...)
+ #define MYLOG(...)
 #endif
 
 // main()
 // ------
 #if __SQLMOTION_DEBUG__
-#define DEBUG(...)  printf(__VA_ARGS__)
-#define DEBUG_m(...)  printf(__VA_ARGS__)
-#define SYSLOG(...)  syslog(__VA_ARGS__)
-#define BREAKmain1 false
-#define BREAKmain2 false
+ #define DEBUG(...)  printf(__VA_ARGS__)
+ #define DEBUG_m(...)  printf(__VA_ARGS__)
+ #define SYSLOG(...)  syslog(__VA_ARGS__)
+ #define BREAKmain1 false
+ #define BREAKmain2 false
 #else
-#define DEBUG(...)
-#define DEBUG_m(...)
-#define SYSLOG(...)  
+ #define DEBUG(...)
+ #define DEBUG_m(...)
+ #define SYSLOG(...)  
 #endif
 
 // Datenbanken
 // -------------
 #if __SQLMOTION_DEBUG__d
-#define DEBUG_d(...)  printf(__VA_ARGS__)
+ #define DEBUG_d(...)  printf(__VA_ARGS__)
 #else
-#define DEBUG_d(...)
+ #define DEBUG_d(...)
 #endif
 
 
@@ -113,16 +115,17 @@ char MailBody[BODYLEN];
 #endif
 
 #if __SQLMOTION_DEBUG__2
-int cnt = 0;
-#define DEBUG_2(...)  printf(__VA_ARGS__)
+ int cnt = 0;
+ #define DEBUG_2(...)  printf(__VA_ARGS__)
 #else
-#define DEBUG_2(...)
+ #define DEBUG_2(...)
 #endif
 
 #if __SQLMOTION_DEBUG__z
-#define DEBUG_z(...)  printf(__VA_ARGS__)
+ #define DEBUG_z(...)  printf(__VA_ARGS__)
+ #define MYLOG(...)  MyLog(PROGNAME, __FUNCTION__, __LINE__, __VA_ARGS__)
 #else
-#define DEBUG_z(...)
+ #define DEBUG_z(...)
 #endif
 
 //************************************************************************************//
@@ -137,10 +140,10 @@ void showMain_Error( char* Message, const char* Func, int Zeile)
 
   printf("\n    -- Fehler --> %s\n", ErrText);    // lokale Fehlerausgabe
   syslog(LOG_NOTICE, ErrText);
-  digitalWrite (LED_GELB,   LED_AUS);
-  digitalWrite (LED_GRUEN,  LED_AUS);
-  digitalWrite (LED_BLAU,   LED_AUS);
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_ge1,   LED_AUS);
+  digitalWrite (LED_gn1,   LED_AUS);
+  digitalWrite (LED_bl1,   LED_AUS);
+  digitalWrite (LED_rt,    LED_EIN);
 
   {// --- Log-Ausgabe ---------------------------------------------------------
     char LogText[ZEILE];  sprintf(LogText, 
@@ -184,7 +187,7 @@ int Error_NonFatal( char* Message, const char* Func, int Zeile)
 
   DEBUG("   -- Fehler -->  %s\n", ErrText);     // lokale Fehlerausgabe
 
-  digitalWrite (LED_ROT,    LED_EIN);
+  digitalWrite (LED_rt,    LED_EIN);
   ErrorFlag = time(0) + BRENNDAUER;             // Steuerung rote LED
 
   if (errsv == 24)                              // 'too many open files' ...
@@ -202,6 +205,53 @@ int Error_NonFatal( char* Message, const char* Func, int Zeile)
 }
 //************************************************************************************//
 
+int getEventNummer()
+{
+  char buffer[NOTIZ]="000000";
+  FILE* fp = fopen(EVENTNUMMER, "r");		
+	if (NULL != fp)
+	{
+  	fread(buffer, sizeof(buffer), 1, fp);
+  	fclose(fp);
+  }
+  return atoi(buffer);
+}
+
+void saveEventNummer(int EvNum)
+{
+  char buffer[NOTIZ];
+  sprintf(buffer, "%d", EvNum);
+  FILE* fp = fopen(EVENTNUMMER, "w");	 
+	if (NULL != fp)
+	{
+  	fwrite(buffer, strlen(buffer) + 1, 1, fp);
+  	fclose(fp);
+  }
+}
+//************************************************************************************//
+
+// Kamera-LED schalten
+//  ------------------
+void ChannelLED(int Herkunft, int EinAus)
+{
+	switch(Herkunft) 
+	{
+		case PIX: digitalWrite (LED_gn1, EinAus); break;
+		case USB: digitalWrite (LED_ge1, EinAus); break;
+		default:  digitalWrite (LED_rt, LED_EIN); break;
+	}
+}
+//************************************************************************************//
+
+//Kamera-LED blinken
+// ------------------
+void ChannelBlink(int Herkunft, int Blinkzeit)
+{
+	ChannelLED(Herkunft, LED_AUS);
+  delay(Blinkzeit);
+	ChannelLED(Herkunft, LED_EIN);
+  delay(Blinkzeit);
+}
 //************************************************************************************//
 
 // Eventnummer ermitteln
@@ -248,22 +298,29 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
 {
   DEBUG_d("=> %s()#%d: %s('%s', '%s') ======\n",
              __FUNCTION__, __LINE__, __FUNCTION__, FolderName, EventKey);
+	Startzeit(T_FILE);                                           // Zeitmessung starten
+
   int retval = false;
   int TempZahl = 1000;                // Default-Basis
   char textQuery[ZEILE];              // Buffer für Datenbankabfragen
 
   char* str = strrchr(FolderName, EVSLH) + 1;
-  // dies sollte eine 4stellige Zahl sein
+  // dies sollte eine 5stellige Zahl sein
   if (str != NULL)
   { // ... aus Foldername
     TempZahl = atoi(str);
   }
+  { // --- Log-Ausgabe ---------------------------------------------------------
+  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - EventNummer: %d -  TempZahl: %d", myPID, __FUNCTION__, EventNummer, TempZahl);
+    MYLOG(LogText);
+  }
+ 	TempZahl = EventNummer > TempZahl ? EventNummer : TempZahl;
 
   unsigned int num_rows = -1;         // Anzahl Zeilen in der Abfrage
   do  // ===============================================================================
   {
     char TempKey[ZEILE];
-    sprintf( TempKey, "%s%04d", _FOLDER, TempZahl);
+    sprintf( TempKey, "%s%05d", _FOLDER, TempZahl);
     { // --- Debug-Ausgaben ------------------------------------------
       #define MELDUNG   "   %s()#%d: TempZahl='%d' => '%s'\n"
       DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, TempZahl, TempKey);
@@ -275,6 +332,10 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
       #define MELDUNG   "   %s()#%d: '%s'\n"
       DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, textQuery);
       #undef MELDUNG
+      { // --- Log-Ausgabe ---------------------------------------------------------
+      	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - '%s'", myPID, __FUNCTION__, textQuery);
+        MYLOG(LogText);
+      }
     } // --------------------------------------------------------------
 
     if (mysql_query(con, textQuery))            // Abfrage
@@ -291,13 +352,23 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
           DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, num_rows);
           #undef MELDUNG
         } // ---------------------------------------------------------------------
+        { // --- Log-Ausgabe ---------------------------------------------------------
+        	char LogText[ZEILE];  sprintf(LogText, "%d     -  %s - num_rows = %d", myPID, __FUNCTION__, num_rows);
+          MYLOG(LogText);
+        }
       }
+      EventNummer = TempZahl;
       mysql_free_result(result);                // Buffer freigeben
       TempZahl++;
     } 
     strcpy(EventKey, TempKey);
   }
   while(num_rows > 0);  // wiederholen, bis es den Key nicht mehr gibt ===============
+  
+  { // --- Log-Ausgabe ---------------------------------------------------------
+  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_FILE));
+    MYLOG(LogText);
+  }
 
   retval = true;
  
@@ -506,7 +577,7 @@ int AddEvent(MYSQL* con, char* thisEvent, time_t* FaDatum, long thisSize, char* 
   DEBUG_d("=> %s()#%d: %s(%ld, %s, %ld, %ld, %s)\n",
              __FUNCTION__, __LINE__, __FUNCTION__,
              (long int)con, thisEvent, *FaDatum, thisSize, Remark);
-  Startzeit(5);                       // Zeitmessung starten
+	Startzeit(T_EVENT);               	// Zeitmessung starten
 
   int PriID = 0;                      // PrimaryID des Datensatzes
   char textQuery[ZEILE];              // Buffer für Datenbankabfragen
@@ -633,6 +704,10 @@ int AddEvent(MYSQL* con, char* thisEvent, time_t* FaDatum, long thisSize, char* 
     #define MELDUNG   "   %s()#%d: Datensatz-ID = '%i'\n"
     DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, PriID);
     #undef MELDUNG
+   	{ // --- Log-Ausgabe ---------------------------------------------------------
+			char LogText[ZEILE];  sprintf(LogText, " %d     - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_EVENT));
+      MYLOG(LogText);
+    }
   } // --------------------------------------------------------------
 
   DEBUG_d("<- %s()#%d -<%d>- \n",  __FUNCTION__, __LINE__ , PriID);
@@ -667,9 +742,9 @@ bool toFIFO (char* inhalt)
       #define ANZEIT  333 /* msec */
       for (int ix = 12; ix <=0; ix--)
       {
-        digitalWrite (LED_ROT, LED_EIN);
+        digitalWrite (LED_rt, LED_EIN);
         delay(ANZEIT);
-        digitalWrite (LED_ROT, LED_AUS);
+        digitalWrite (LED_rt, LED_AUS);
         delay(ANZEIT);
       }
       return false;
@@ -714,7 +789,7 @@ int main(int argc, char* argv[])
   sprintf (Version, "Vers. %d.%d.%d - %s", MAXVERS, MINVERS, BUILD, __DATE__);
   openlog(PROGNAME, LOG_PID, LOG_LOCAL7 ); // Verbindung zum Dämon Syslog aufbauen
   SYSLOG(LOG_NOTICE, ">>>>>> %s - %s - PID %d - User %d/%d - Group %d/%d <<<<<<",
-                          PROGNAME, Version, getpid(), geteuid(),getuid(), getegid());
+                PROGNAME, Version, getpid(), geteuid(),getuid(), getegid(),getgid());
   {// --- Log-Ausgabe ---------------------------------------------------------
     char LogText[ZEILE];  sprintf(LogText, 
        ">>>> %s - PID %d, User %d/%d, Group %d/%d, Anzahl Argumente: '%d'",
@@ -771,6 +846,19 @@ int main(int argc, char* argv[])
   #pragma GCC diagnostic pop
   SYSLOG(LOG_NOTICE, ">> %s()#%d", __FUNCTION__, __LINE__);
 
+	
+	enum Src Herkunft = UNDEF;
+	if (strstr(argv[1], SOURCE1))
+	{ 
+		Herkunft = PIX;
+	}
+	else if (strstr(argv[1], SOURCE2))       
+	{ 
+		Herkunft = USB;
+	}
+  DEBUG(">> %s()#%d - Herkunft '%d'-> '%s'\n", 
+                               __FUNCTION__, __LINE__, Herkunft, argv[1]);
+
 
   for (int ix=0; ix < argc; ix++)
   {
@@ -792,42 +880,41 @@ int main(int argc, char* argv[])
 
   // Prozess-ID ablegen  
   // ------------------
-  savePID(FPID);
+  myPID = savePID(FPID);
   { // --- Debug-Ausgaben -------------------------------------------
-    #define MELDUNG ">> %s()#%d: meine PID: '%ld'%c"  
-    DEBUG(MELDUNG, __FUNCTION__, __LINE__, savePID(FPID), '\n');
-    SYSLOG(LOG_NOTICE, MELDUNG, __FUNCTION__, __LINE__, savePID(FPID), '\0');
+    #define MELDUNG ">> %s()#%d: meine PID: '%d'%c"  
+    DEBUG(MELDUNG, __FUNCTION__, __LINE__, myPID, '\n');
+    SYSLOG(LOG_NOTICE, MELDUNG, __FUNCTION__, __LINE__, myPID, '\0');
     #undef MELDUNG
   } // ---------------------------------------------------------------
   SYSLOG(LOG_NOTICE, ">> %s()#%d", __FUNCTION__, __LINE__);
+  {// --- Log-Ausgabe ---------------------------------------------------------
+		char LogText[ZEILE];  sprintf(LogText, "     %d - '%s'", myPID, argv[1]);
+    MYLOG(LogText);
+  } // ------------------------------------------------------------------------
 
   // Ist GPIO klar?
   // -------------------------------------------
-  #define ANZEIT  111 /* msec */
   wiringPiSetup();
   SYSLOG(LOG_NOTICE, ">> %s()#%d", __FUNCTION__, __LINE__);
-  pinMode (LED_ROT,    OUTPUT);
-  pinMode (LED_GELB,   OUTPUT);
-  pinMode (LED_GRUEN,  OUTPUT);
-  pinMode (LED_BLAU,   OUTPUT);
-  pullUpDnControl (LED_ROT,   PUD_UP) ;
-  pullUpDnControl (LED_GELB,  PUD_UP) ;
-  pullUpDnControl (LED_GRUEN, PUD_UP) ;
-  pullUpDnControl (LED_BLAU,  PUD_UP) ;
-  digitalWrite (LED_GRUEN,  LED_EIN);
-  digitalWrite (LED_BLAU,   LED_EIN);
-  for (int ix=3; ix > 0; ix--)
+  pinMode (LED_rt,    OUTPUT);
+  pinMode (LED_ge1,   OUTPUT);
+  pinMode (LED_gn1,   OUTPUT);
+  pinMode (LED_bl1,   OUTPUT);
+  pullUpDnControl (LED_rt,   PUD_UP) ;
+  pullUpDnControl (LED_ge1,  PUD_UP) ;
+  pullUpDnControl (LED_gn1,  PUD_UP) ;
+  pullUpDnControl (LED_bl1,  PUD_UP) ;
   {
-    digitalWrite (LED_ROT,  LED_EIN);
-    digitalWrite (LED_GELB, LED_EIN);
-    delay(ANZEIT);
-    digitalWrite (LED_ROT,  LED_AUS);
-    digitalWrite (LED_GELB, LED_AUS);
-    delay(ANZEIT);
+		#define INTERVALL  33 /* msec */
+    for (int ix=12; ix > 0; ix--)
+    {
+			ChannelBlink(Herkunft, INTERVALL);
+    }
+    ChannelLED(Herkunft, LED_EIN);
+  	#undef INTERVALL
   }
-  digitalWrite (LED_GRUEN,  LED_AUS);
-  digitalWrite (LED_BLAU,   LED_AUS);
-  #undef ANZEIT
+
   { // --- Debug-Ausgaben -------------------------------------------
     #define MELDUNG ">> %s()#%d: GPIO OK%c"  
     DEBUG(MELDUNG, __FUNCTION__, __LINE__, '\n');
@@ -835,6 +922,7 @@ int main(int argc, char* argv[])
     #undef MELDUNG
   } // ---------------------------------------------------------------
 
+//	printf("- #%d\n", __LINE__);
 
   // wenn keine Daten: hier beenden
   // -------------------------------
@@ -849,11 +937,23 @@ int main(int argc, char* argv[])
          "<<< Anzahl Argumente '%d': Exit!",  argc);
       MYLOG(LogText);
     } // ------------------------------------------------------------------------
+ 		digitalWrite (LED_gn1, LED_AUS);
+ 		digitalWrite (LED_ge1, LED_AUS);
     exit (EXIT_FAILURE);
   }
   SYSLOG(LOG_NOTICE, ">> %s()#%d", __FUNCTION__, __LINE__);
 
-  
+
+	// gespeicherte Eventnummer holen
+	// ------------------------------
+	EventNummer = getEventNummer();
+  {// --- Log-Ausgabe ---------------------------------------------------------
+		char LogText[ZEILE];  sprintf(LogText, "     %d - EventNummer: %d", myPID, EventNummer);
+    MYLOG(LogText);
+  } // ------------------------------------------------------------------------
+	saveEventNummer(EventNummer+1);
+
+
   // Datenbank und Tabellen erzeugen, wenn noch nicht vorhanden
   // ----------------------------------------------------------
   DEBUG(">> %s()#%d - Datenbank erzeugen\n", __FUNCTION__, __LINE__);
@@ -901,10 +1001,10 @@ Phase_1:
 //*    alle jpg-Dateien dieses Events in das Verzeichnis
 //*  }
 
-  digitalWrite (LED_GELB, LED_AUS);
-  digitalWrite (LED_GRUEN, LED_EIN);
-  int newFolder = 0;                  // Verzeichniszähler
-  int newFiles = 0;                   // Dateizähler
+//  digitalWrite (LED_ge1, LED_AUS);
+//  digitalWrite (LED_gn1, LED_EIN);
+//  int newFolder = 0;                  // Verzeichniszähler
+//  int newFiles = 0;                   // Dateizähler
 
   { // --- Debug-Ausgaben ----------------------------------------------------------------------
     #define MELDUNG "\n%s()#%d: ==== Phase 1: Dateien in '%s' ordnen ================================\n\n"
@@ -913,6 +1013,7 @@ Phase_1:
     #undef MELDUNG
   }// -------------------------------------------------------------------------------------------
 
+	ChannelBlink(Herkunft, BLINK);
   Startzeit(T_GESAMT);                // Zeitmessung über alles starten
   Startzeit(T_ABSCHNITT);             // Zeitmessung Phase 1 starten
 
@@ -924,11 +1025,13 @@ Phase_1:
     #undef MELDUNG
   } // -----------------------------------------------------------------------------------------
 
-  char** DateiListe = argv;                     // die übergebene Dateiliste
+  char** DateiListe = argv;        		// die übergebene Dateiliste
+  int newFolder = 0;                  // Verzeichniszähler
+  int newFiles = 0;                   // Dateizähler
 
   while(*++DateiListe)
   {
-    char* thisDatei = *DateiListe;              // eine einzelne Datei
+    char* thisDatei = *DateiListe; 		// eine einzelne Datei
     int thisFiletype = getFiletyp(thisDatei);
 
     // nächste Filmdatei suchen
@@ -985,8 +1088,11 @@ Phase_1:
   { // --- Debug-Ausgaben ---------------------------------------
     #define MELDUNG   "\n%s()#%d: ---- Phase 1 fertig: %d Folders, %d Files in %ld msec --------------------------------------\n"
     DEBUG(MELDUNG, __FUNCTION__, __LINE__, newFolder, newFiles, Zwischenzeit(T_ABSCHNITT));
-    SYSLOG(LOG_NOTICE, MELDUNG, __FUNCTION__, __LINE__, newFolder, newFiles, Zwischenzeit(T_ABSCHNITT));
     #undef MELDUNG
+    {
+			char LogText[ZEILE];  sprintf(LogText, "    %d - Phase 1 done in %ld msec", myPID, Zwischenzeit(T_ABSCHNITT));
+      MYLOG(LogText);
+    }
     // ---------------------------------------------------------- 
   }
   #if BREAKmain1
@@ -1017,6 +1123,7 @@ Phase_2:
 //*    Verzeichnis als Event in Datenbank
 //*  }
 
+	ChannelBlink(Herkunft, BLINK);
   Startzeit(T_ABSCHNITT);             // Zeitmessung Phase 2 starten
   float SizeTotal = 0;                // gesamte Speicherbelegung
 
@@ -1163,18 +1270,23 @@ Phase_2:
           SizeTotal += myFileSize;
           DEBUG_2("             .........%s\n", myFilename);
         } // ---- Ende reguläre Datei
+				ChannelBlink(Herkunft, BLINK/3);
       }  // --- Ende Eventverzeichnis durchsuchen T_FILES
 
       { // --- Zeitmessung Dateien prüfen ---------------------------------------
         #define MELDUNG   "%s()#%d: ------ Zwischenzeit >Dateien pruefen<: '%ld' msec ------\n"
         DEBUG_z(MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_FILES));
         #undef MELDUNG
+        { // --- Log-Ausgabe ---------------------------------------------------------
+    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Check Files in %ld msec", myPID, Zwischenzeit(T_FILES));
+          MYLOG(LogText);
+        }
       } // ---------------------------------------------------------------
 
       // das Eventverzeichnis in der Datenbank vermerken
       // ------------------------------------------------
       struct stat dAttribut;
-      char EventKey[ZEILE] = {'\0'};                               // Eventname
+      char EventKey[ZEILE] = {'\0'};                               	// Eventname
       char Remark[ZEILE] = {'\0'};                                  // Bemerkung
 
       Startzeit(T_DBASE);                                           // Zeitmessung starten
@@ -1186,10 +1298,10 @@ Phase_2:
         showMain_Error( ErrText,__FUNCTION__,__LINE__);
       }
 
-//      time_t dFaDatum = dAttribut.st_mtime;                         // Datum des Verzeichnisses
-      int PrimaryID = -1;                                           // PrimärID des Datensatzes
-      sprintf(Remark, "JPGs=%i - AVIs=%i - Mem: %i kB",             // Bemerkungs-Text
-                      cntJPGs,  cntAVIs, (int)(SizeFolder+1024/2)/1024);      
+//      time_t dFaDatum = dAttribut.st_mtime;                       // Datum des Verzeichnisses
+      int PrimaryID = -1;                                        		// PrimärID des Datensatzes
+      sprintf( Remark, "JPGs=%i - AVIs=%i - Mem: %i kB - %s", 			// Bemerkungs-Text
+                      cntJPGs,  cntAVIs, (int)(SizeFolder+1024/2)/1024, Herkunft==PIX ? SOURCE1 : SOURCE2);      
       { // --- Debug-Ausgaben ---------------------------------------------- 
         #define MELDUNG "%s()#%d: \n"
         DEBUG_2(MELDUNG, __FUNCTION__, __LINE__);
@@ -1205,22 +1317,36 @@ Phase_2:
           #undef MELDUNG
           // -----------------------------------------------------------------
         }
+       	{ // --- Log-Ausgabe ---------------------------------------------------------
+    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
+          MYLOG(LogText);
+        }
         PrimaryID = AddEvent(con, EventKey, &EventDatum, SizeFolder, Remark);
         { // Eventkey als Datei
           // -------------------
-//          >> main()#779 --- Argument 0: ./SqlMotion
-//>> main()#779 --- Argument 1: /home/pi/Garten/piu/Event_376
-//>> main()#779 --- Argument 2: /home/pi/Garten/piu/Event_377 argv[1]
-
-          FILE *Datei;
+      		Startzeit(T_FILE);                              					// Zeitmessung starten
+          FILE *Datei;  
           char KeyFile[ZEILE];
-          sprintf(KeyFile,"%s/%s.info", myPath, EventKey); 
+          if (Herkunft == PIX)
+           	sprintf(KeyFile,"%s/%s-pix.info", myPath, EventKey); 
+          else if (Herkunft == USB)
+           	sprintf(KeyFile,"%s/%s-usb.info", myPath, EventKey); 
+          else
+           	sprintf(KeyFile,"%s/%s-error.info", myPath, EventKey); 
           Datei = fopen (KeyFile, "w");
           fprintf(Datei, "%s %s\r\n", PROGNAME, Version);
           fprintf(Datei, "   Source = %s\r\n", argv[1]); 
           fprintf(Datei, "PrimaryID = %d\r\n", PrimaryID);
           fprintf(Datei, " EventKey = '%s'\r\n", EventKey);
           fclose (Datei);
+         	{ // --- Log-Ausgabe ---------------------------------------------------------
+      			char LogText[ZEILE];  sprintf(LogText, "    %d     - Info-File '%s' in %ld msec", myPID, KeyFile, Zwischenzeit(T_FILE));
+            MYLOG(LogText);
+          }
+        }
+       	{ // --- Log-Ausgabe ---------------------------------------------------------
+    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
+          MYLOG(LogText);
         }
       }
       else
@@ -1233,9 +1359,14 @@ Phase_2:
         #define MELDUNG "%s()#%d: \n"
         DEBUG_2(MELDUNG, __FUNCTION__, __LINE__);
         #undef MELDUNG
+       	{ // --- Log-Ausgabe ---------------------------------------------------------
+    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: to Database in %ld msec", myPID, Zwischenzeit(T_DBASE));
+          MYLOG(LogText);
+        }
+
         // -----------------------------------------------------------------
       }
-      // LED_AUS der PrimärID einen neuen Event-Namen erzeugen
+      // Aus der PrimärID einen neuen Event-Namen erzeugen
       // -------------------------------------------------
       {
         char neuerEventName[ZEILE] = {'\0'};
@@ -1268,14 +1399,10 @@ Phase_2:
     DEBUG_z(MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_ABSCHNITT));
     SYSLOG(LOG_NOTICE, MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_ABSCHNITT));
     #undef MELDUNG
-    { // --- Log-Ausgabe ---------------------------------------------------------
-      char LogText[ZEILE];  sprintf(LogText, 
-         "<<< Data ready in %ld msec!", Zwischenzeit(T_ABSCHNITT));
-      MYLOG(LogText);
-    } // ------------------------------------------------------------------------
   } // ----------------------------------------------------------
 
   mysql_close(con);                             // Datenbank schließen
+	saveEventNummer(EventNummer);									// Eventnummer wieder speichern
 
 // ===== Phase 2 beendet===========================================================================
 
@@ -1289,6 +1416,10 @@ Phase_2:
     #define MELDUNG   "%s()#%d: Speicherbelegung '%s': %s\n"
     DEBUG(MELDUNG, __FUNCTION__, __LINE__, thisPfad, sTotal);
     #undef MELDUNG
+    { // --- Log-Ausgabe ---------------------------------------------------------
+			char LogText[ZEILE];  sprintf(LogText, "    %d - Phase 2 done in %ld msec", myPID, Zwischenzeit(T_ABSCHNITT));
+      MYLOG(LogText);
+    }
   } // ----------------------------------------------------------
 
   #if BREAKmain2
@@ -1315,25 +1446,29 @@ Phase_2:
 
   Startzeit(T_ABSCHNITT);             // Zeitmessung Phase 3 starten
 
-  digitalWrite (LED_GRUEN, LED_AUS);
-  digitalWrite (LED_BLAU, LED_EIN);
+  digitalWrite (LED_gn1, LED_AUS);
+  digitalWrite (LED_ge1, LED_AUS);
+  digitalWrite (LED_bl1, LED_EIN);
   toFIFO(thisPfad);                   // >>>>>>>>> über FIFO (named pipe) senden >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  digitalWrite (LED_ROT, LED_AUS);
+  digitalWrite (LED_rt, LED_AUS);
   SYSLOG(LOG_NOTICE, ">>> %s()#%d: %s --- done in %ld msec", __FUNCTION__,__LINE__, PROGNAME, Zwischenzeit(T_GESAMT));
-  { // --- Log-Ausgabe ---------------------------------------------------------
-    char LogText[ZEILE];  sprintf(LogText, 
-       "<<< Done in %ld msec!", Zwischenzeit(T_GESAMT));
-    MYLOG(LogText);
-  } // ------------------------------------------------------------------------
 
 
   { // --- Debug-Ausgaben ---------------------------------------
     #define MELDUNG   "%s()#%d: ---- Phase 3 fertig in %ld msec ---------------------------------------------------------\n"
     DEBUG(MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_ABSCHNITT));
     #undef MELDUNG
+    { // --- Log-Ausgabe ---------------------------------------------------------
+			char LogText[ZEILE];  sprintf(LogText, "    %d - Phase 3 done in %ld msec", myPID, Zwischenzeit(T_ABSCHNITT));
+      MYLOG(LogText);
+    }
     #define MELDUNG   "%s()#%d: ---- Gesamtzeit: %ld msec -----\n"
     DEBUG(MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_GESAMT));
     #undef MELDUNG
+    { // --- Log-Ausgabe ---------------------------------------------------------
+			char LogText[ZEILE];  sprintf(LogText, "    %d - Total done in %ld msec", myPID, Zwischenzeit(T_GESAMT));
+      MYLOG(LogText);
+    }
   } // ----------------------------------------------------------
 
   closelog();

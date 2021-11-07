@@ -1,29 +1,34 @@
-//*********************************************************************************************//
+//******* Kamera ******************************************************************************//
 //*                                                                                           *//
 //* File:          common.c                                                                   *//
 //* Author:        Wolfgang Keuch                                                             *//
 //* Creation date: 2021-04-18;                                                                *//
-//* Last change:   2021-09-25 - 12:52:18                                                      *//
+//* Last change:   2021-11-07 - 10:42:18                                                      *//
 //* Description:   Hilfsfunktionen und  Vereinbarungen zwischen den Programmen                *//
 //*                                                                                           *//
 //* Copyright (C) 2019-21 by Wolfgang Keuch                                                   *//
 //*                                                                                           *//
 //*********************************************************************************************//
 
-#define __COMMON_DEBUG__ false
+#define __COMMON_DEBUG__ true
 
 #include <time.h>
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <stdint.h>
+#include <stdint.h> 
 #include <string.h>
 #include <unistd.h>
+#include <syslog.h>
 #include <stdbool.h>
 
 #include "./datetime.h"
 #include "./common.h"
+
+#define SYSLOG(...)  syslog(__VA_ARGS__)
+
+static int retry; 					// für 'MyLog'
 
 //***********************************************************************************************
 /*
@@ -31,14 +36,15 @@
  * ---------------------
  */
 #if __COMMON_DEBUG__
-#define DEBUG(...)  printf(__VA_ARGS__)
+	#define DEBUG(...)  printf(__VA_ARGS__)
+	char Uhrzeitbuffer[TIMLEN];
 #else
-#define DEBUG(...)
+	#define DEBUG(...)
 #endif
 
 #define DEBUG_s(...) // printf(__VA_ARGS__)
 
-#define DEBUG_p(...) // printf(__VA_ARGS__)
+#define DEBUG_p(...)  printf(__VA_ARGS__)
 
 //***********************************************************************************************
 
@@ -503,32 +509,54 @@ bool feedWatchdog(char* Name)
 
 // Protokoll schreiben
 // ------------------------
+// Achtung:
+// gegenseitige Rechtevergabe
+// Gruppen-Schreibberechtigung für Logfile !
 bool MyLog(const char* Program, const char* Function, int Line, const char* pLogText)
 {
   DEBUG_p("=======> %s()#%d: %s(\"%s\")\n", __FUNCTION__, __LINE__, __FUNCTION__, pLogText);
   int status = false;
+	int count = 0;
+	#define MAXCOUNT 50
 
-  FILE* logFile = fopen(LOGFILE, "a+");
+  FILE* logFile = fopen(LOGFILE, "a+");		// Flags: 'O_RDWR | O_CREAT | O_APPEND'
+  
   if(NULL == logFile)
-  { // --- Debug-Ausgaben ---------------------------------------------------
-    char ErrText[ZEILE];
-    sprintf(ErrText, "Error fopen('%s'): Error %d(%s)", LOGFILE, errno, strerror(errno));
-    DEBUG_p("         %s()#%d: %s!\n", __FUNCTION__, __LINE__, ErrText);
-  } // ----------------------------------------------------------------------
-  else
+  {	// NULL is returned and errno is set to indicate the error.
+    { // --- Debug-Ausgaben ---------------------------------------------------
+      char ErrText[ZEILE];
+      sprintf(ErrText, "Error fopen('%s'): Error %d(%s)", LOGFILE, errno, strerror(errno));
+      DEBUG_p("    ** %s **     %s()#%d: %s!\n", __FILE__, __FUNCTION__, __LINE__, ErrText);
+    } // ----------------------------------------------------------------------
+  	do
+  	{	// auf Freigabe warten
+  		// -------------------
+  		usleep(50);
+  		logFile = fopen(LOGFILE, "a+");		// Flags: 'O_RDWR | O_CREAT | O_APPEND'
+  	}
+  	while ((errno == 13) && (count++ < MAXCOUNT));
+    { // --- Debug-Ausgaben ---------------------------------------------------
+      char ErrText[ZEILE];
+      sprintf(ErrText, "Error fopen('%s'): count=%d", LOGFILE, count);
+      DEBUG_p("    ** %s **     %s()#%d: %s!\n", __FILE__, __FUNCTION__, __LINE__, ErrText);
+    } // ----------------------------------------------------------------------
+	}
+  
+  if(NULL != logFile)
   {
     char neueZeile[ZEILE];
     char aktuelleZeit[NOTIZ];
-    sprintf(neueZeile, "%s- %s.%s()#%d: %s\n",
-               mkdatum(time(0), aktuelleZeit), Program, Function, Line, pLogText);
+    sprintf(neueZeile, "%s(%d) %s.%s()#%d: %s\n",     
+       mkdatum(time(0), aktuelleZeit), count, Program, Function, Line, pLogText);
     { // --- Debug-Ausgaben ---------------------------------------------------
       DEBUG_p("         %s()#%d: neue Zeile: '%s'!\n",
                                             __FUNCTION__, __LINE__, neueZeile);
     } // ----------------------------------------------------------------------
     fputs(neueZeile, logFile);
     fclose(logFile);
-    status = true;
+    status = count;
   }
+  retry=0;
 
   DEBUG_p("<------- %s()#%d -<%d>- \n",  __FUNCTION__, __LINE__, status);
   return status;

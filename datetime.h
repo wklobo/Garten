@@ -66,7 +66,9 @@ char* mkdatum(time_t zeit, char* buf);        // Datum/Uhrzeit aus time_t(=long)
 #define T_FOLDER      2
 #define T_FILES       3
 #define T_DBASE       4
-#define TIMER 6                   /* Anzahl Zeitmess-Timer */
+#define T_EVENT       5
+#define T_FILE        6
+#define TIMER 8                   /* Anzahl Zeitmess-Timer */
 bool Startzeit(int Timer);        // Zeitmessung starten
 long Zwischenzeit(int Timer);     // Zeit nehmen/auslesen
 

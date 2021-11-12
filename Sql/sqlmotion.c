@@ -3,7 +3,7 @@
 //* File:          sqlmotion.c                                              *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2014-07-20  --  2016-02-18                               *//
-//* Last change:   2021-11-07 - 11:04:08                                    *//
+//* Last change:   2021-11-12 - 14:50:23                                    *//
 //* Description:   Weiterverarbeitung von 'motion'-Dateien:                 *//
 //*                Event ermitteln, daraus ein Verzeichnis erstellen,       *//
 //*                zugehörige Dateien in dieses Verzeichnis verschieben     *//
@@ -22,11 +22,11 @@
 #define _DEFAULT_SOURCE
 #define _MODUL0
 #define __SQLMOTION_MYLOG__    true
-#define __SQLMOTION_DEBUG__    true
+#define __SQLMOTION_DEBUG__    false
 #define __SQLMOTION_DEBUG__d   false     /* Datenbanken */
 #define __SQLMOTION_DEBUG__1   false
 #define __SQLMOTION_DEBUG__2   false
-#define __SQLMOTION_DEBUG__z   true
+#define __SQLMOTION_DEBUG__z   false
 
 #include "./version.h"
 #include "./sqlmotion.h"
@@ -310,10 +310,10 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
   { // ... aus Foldername
     TempZahl = atoi(str);
   }
-  { // --- Log-Ausgabe ---------------------------------------------------------
-  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - EventNummer: %d -  TempZahl: %d", myPID, __FUNCTION__, EventNummer, TempZahl);
-    MYLOG(LogText);
-  }
+//  { // --- Log-Ausgabe ---------------------------------------------------------
+//  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - EventNummer: %d -  TempZahl: %d", myPID, __FUNCTION__, EventNummer, TempZahl);
+//    MYLOG(LogText);
+//  }
  	TempZahl = EventNummer > TempZahl ? EventNummer : TempZahl;
 
   unsigned int num_rows = -1;         // Anzahl Zeilen in der Abfrage
@@ -332,10 +332,10 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
       #define MELDUNG   "   %s()#%d: '%s'\n"
       DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, textQuery);
       #undef MELDUNG
-      { // --- Log-Ausgabe ---------------------------------------------------------
-      	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - '%s'", myPID, __FUNCTION__, textQuery);
-        MYLOG(LogText);
-      }
+//      { // --- Log-Ausgabe ---------------------------------------------------------
+//      	char LogText[ZEILE];  sprintf(LogText, "%d   - %s - '%s'", myPID, __FUNCTION__, textQuery);
+//        MYLOG(LogText);
+//      }
     } // --------------------------------------------------------------
 
     if (mysql_query(con, textQuery))            // Abfrage
@@ -352,10 +352,10 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
           DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, num_rows);
           #undef MELDUNG
         } // ---------------------------------------------------------------------
-        { // --- Log-Ausgabe ---------------------------------------------------------
-        	char LogText[ZEILE];  sprintf(LogText, "%d     -  %s - num_rows = %d", myPID, __FUNCTION__, num_rows);
-          MYLOG(LogText);
-        }
+//        { // --- Log-Ausgabe ---------------------------------------------------------
+//        	char LogText[ZEILE];  sprintf(LogText, "%d     -  %s - num_rows = %d", myPID, __FUNCTION__, num_rows);
+//          MYLOG(LogText);
+//        }
       }
       EventNummer = TempZahl;
       mysql_free_result(result);                // Buffer freigeben
@@ -365,10 +365,10 @@ int getEventKey(MYSQL* con, char* FolderName, char* EventKey)
   }
   while(num_rows > 0);  // wiederholen, bis es den Key nicht mehr gibt ===============
   
-  { // --- Log-Ausgabe ---------------------------------------------------------
-  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_FILE));
-    MYLOG(LogText);
-  }
+//  { // --- Log-Ausgabe ---------------------------------------------------------
+//  	char LogText[ZEILE];  sprintf(LogText, "%d   - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_FILE));
+//    MYLOG(LogText);
+//  }
 
   retval = true;
  
@@ -704,10 +704,10 @@ int AddEvent(MYSQL* con, char* thisEvent, time_t* FaDatum, long thisSize, char* 
     #define MELDUNG   "   %s()#%d: Datensatz-ID = '%i'\n"
     DEBUG_d(MELDUNG, __FUNCTION__, __LINE__, PriID);
     #undef MELDUNG
-   	{ // --- Log-Ausgabe ---------------------------------------------------------
-			char LogText[ZEILE];  sprintf(LogText, " %d     - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_EVENT));
-      MYLOG(LogText);
-    }
+//   	{ // --- Log-Ausgabe ---------------------------------------------------------
+//			char LogText[ZEILE];  sprintf(LogText, " %d     - %s: %ld msec", myPID, __FUNCTION__, Zwischenzeit(T_EVENT));
+//      MYLOG(LogText);
+//    }
   } // --------------------------------------------------------------
 
   DEBUG_d("<- %s()#%d -<%d>- \n",  __FUNCTION__, __LINE__ , PriID);
@@ -1277,10 +1277,10 @@ Phase_2:
         #define MELDUNG   "%s()#%d: ------ Zwischenzeit >Dateien pruefen<: '%ld' msec ------\n"
         DEBUG_z(MELDUNG, __FUNCTION__, __LINE__, Zwischenzeit(T_FILES));
         #undef MELDUNG
-        { // --- Log-Ausgabe ---------------------------------------------------------
-    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Check Files in %ld msec", myPID, Zwischenzeit(T_FILES));
-          MYLOG(LogText);
-        }
+//        { // --- Log-Ausgabe ---------------------------------------------------------
+//    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Check Files in %ld msec", myPID, Zwischenzeit(T_FILES));
+//          MYLOG(LogText);
+//        }
       } // ---------------------------------------------------------------
 
       // das Eventverzeichnis in der Datenbank vermerken
@@ -1317,10 +1317,10 @@ Phase_2:
           #undef MELDUNG
           // -----------------------------------------------------------------
         }
-       	{ // --- Log-Ausgabe ---------------------------------------------------------
-    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
-          MYLOG(LogText);
-        }
+//       	{ // --- Log-Ausgabe ---------------------------------------------------------
+//    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
+//          MYLOG(LogText);
+//        }
         PrimaryID = AddEvent(con, EventKey, &EventDatum, SizeFolder, Remark);
         { // Eventkey als Datei
           // -------------------
@@ -1339,15 +1339,15 @@ Phase_2:
           fprintf(Datei, "PrimaryID = %d\r\n", PrimaryID);
           fprintf(Datei, " EventKey = '%s'\r\n", EventKey);
           fclose (Datei);
-         	{ // --- Log-Ausgabe ---------------------------------------------------------
-      			char LogText[ZEILE];  sprintf(LogText, "    %d     - Info-File '%s' in %ld msec", myPID, KeyFile, Zwischenzeit(T_FILE));
-            MYLOG(LogText);
-          }
+//         	{ // --- Log-Ausgabe ---------------------------------------------------------
+//      			char LogText[ZEILE];  sprintf(LogText, "    %d     - Info-File '%s' in %ld msec", myPID, KeyFile, Zwischenzeit(T_FILE));
+//            MYLOG(LogText);
+//          }
         }
-       	{ // --- Log-Ausgabe ---------------------------------------------------------
-    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
-          MYLOG(LogText);
-        }
+//       	{ // --- Log-Ausgabe ---------------------------------------------------------
+//    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: Zwischenzeit %ld msec", myPID, Zwischenzeit(T_DBASE));
+//          MYLOG(LogText);
+//        }
       }
       else
       { // -- Error
@@ -1359,10 +1359,10 @@ Phase_2:
         #define MELDUNG "%s()#%d: \n"
         DEBUG_2(MELDUNG, __FUNCTION__, __LINE__);
         #undef MELDUNG
-       	{ // --- Log-Ausgabe ---------------------------------------------------------
-    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: to Database in %ld msec", myPID, Zwischenzeit(T_DBASE));
-          MYLOG(LogText);
-        }
+//       	{ // --- Log-Ausgabe ---------------------------------------------------------
+//    			char LogText[ZEILE];  sprintf(LogText, "    %d   - Phase 2: to Database in %ld msec", myPID, Zwischenzeit(T_DBASE));
+//          MYLOG(LogText);
+//        }
 
         // -----------------------------------------------------------------
       }

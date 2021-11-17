@@ -3,7 +3,7 @@
 //* File:          common.h                                                                   *//
 //* Author:        Wolfgang Keuch                                                             *//
 //* Creation date: 2021-04-18;                                                                *//
-//* Last change:   2021-11-07 - 10:42:08                                                      *//
+//* Last change:   2021-11-15 - 15:38:03                                                      *//
 //* Description:   Hilfsfunktionen und  Vereinbarungen zwischen den Programmen                *//
 //*                                                                                           *//
 //* Copyright (C) 2019-21 by Wolfgang Keuch                                                   *//
@@ -110,26 +110,15 @@ enum Src
 
 // Pin-Nummerierung: WiringPi
 // --------------------------
-#define LED_rt       4      	/* Pin 16  */
-#define LED_ge1      5      	/* Pin 18  */
-#define LED_gn1    	16      	/* Pin 10  */
-#define LED_bl1     15      	/* Pin  8  */
-#define LED_ge2      6      	/* Pin 22  */
-#define LED_gn2   	10      	/* Pin 24  */
-#define LED_bl2    	11    		/* Pin 26  */
-//#define LAMP_IRRIGHT  2  /* Pin 13 - IR-Lampe rechts */ // /home/pi/Garten/Pin/Pin 16 0
-//#define LAMP_IRLEFT   0  /* Pin 11 - IR-Lampe links  */
-
-// Pin-Nummerierung: WiringPi - alt Vogel
-// --------------------------------------
-//#define LED_rt      15  /* Pin  8  */
-//#define LED_ge1     16  /* Pin 10  */
-//#define LED_gn1     1  /* Pin 12  */
-//#define LED_bl1      4  /* Pin 16  */
-//#define LED_gn2   24  /* Pin 35  */
-//#define LED_bl2    25  /* Pin 37  */
-//#define LAMP_IRRIGHT  2  /* Pin 13 - IR-Lampe rechts */ // /home/pi/Garten/Pin/Pin 16 0
-//#define LAMP_IRLEFT   0  /* Pin 11 - IR-Lampe links  */
+#define LED_rt       	 4      	/* Pin 16  */
+#define LED_ge1      	 5      	/* Pin 18  */
+#define LED_gn1    		16      	/* Pin 10  */
+#define LED_bl1     	15      	/* Pin  8  */
+#define LED_ge2      	 6      	/* Pin 22  */
+#define LED_gn2   		10      	/* Pin 24  */
+#define LED_bl2    		11    		/* Pin 26  */
+#define LAMP_IRRIGHT   2       	/* Pin 13 - IR-Lampe rechts */  
+#define LAMP_IRLEFT    0       	/* Pin 11 - IR-Lampe links  */
 
 
 // Pin-Nummerierung: WiringPi - alt Kamera

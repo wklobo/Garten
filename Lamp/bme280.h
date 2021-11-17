@@ -3,7 +3,7 @@
 //* File:          bme280.h                                                    *//
 //* Author:        übernommen 2018-08-03 - an LampMotion angepasst -- wkh      *//
 //* Creation date: 2018-08-03;                                                 *//
-//* Last change:   2021-09-20 - 09:54:31                                       *//
+//* Last change:   2021-11-16 - 16:16:02                                       *//
 //* Description:   BME 280 - Temperatur- und Luftdrucksensor lesen             *//
 //*                                                                            *//
 //*                                                                            *//

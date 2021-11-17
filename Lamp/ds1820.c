@@ -3,7 +3,7 @@
 //* File:          ds1820.c                                                 *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2021-04-06;                                              *//
-//* Last change:   2021-09-10 - 13:49:15: neuer Ansatz                      *//
+//* Last change:   2021-11-16 - 16:14:21                                    *//
 //* Description:   Treiber für Temperatur-Sensor DS18B20                    *//
 //*                Treiber für CPU-Temperatur                               *//
 //*                                                                         *//
@@ -12,7 +12,7 @@
 //*                                                                         *//
 //***************************************************************************//
 
-#define __DS1820_DEBUG__   false        /* Debug-Funktion */
+#define __DS1820_DEBUG__   true        /* Debug-Funktion */
 
 #include <time.h>
 #include <stdio.h>

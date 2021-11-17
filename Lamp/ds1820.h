@@ -3,7 +3,7 @@
 //* File:          ds1820.h                                                 *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2021-04-07;                                              *//
-//* Last change:   2021-09-10 - 13:49:15: neuer Ansatz                      *//
+//* Last change:   2021-11-16 - 16:14:50                                    *//
 //* Description:   Treiber für Temperatur-Sensor DS18B20:                   *//
 //*                Treiber für CPU-Temperatur                               *//
 //*                                                                         *//

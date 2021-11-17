@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
-#include <stdint.h> 
+#include <stdint.h>
 #include <string.h>
 #include <unistd.h>
 #include <syslog.h>
@@ -28,7 +28,7 @@
 
 #define SYSLOG(...)  syslog(__VA_ARGS__)
 
-static int retry; 					// für 'MyLog'
+static int retry;           // für 'MyLog'
 
 //***********************************************************************************************
 /*
@@ -36,10 +36,10 @@ static int retry; 					// für 'MyLog'
  * ---------------------
  */
 #if __COMMON_DEBUG__
-	#define DEBUG(...)  printf(__VA_ARGS__)
-	char Uhrzeitbuffer[TIMLEN];
+  #define DEBUG(...)  printf(__VA_ARGS__)
+  char Uhrzeitbuffer[TIMLEN];
 #else
-	#define DEBUG(...)
+  #define DEBUG(...)
 #endif
 
 #define DEBUG_s(...) // printf(__VA_ARGS__)
@@ -168,8 +168,8 @@ char* readRaspiID(char* RaspiID)
 // Stringformat: '/xxx/yyy/zzz/...'
 bool split(const char *msg, char *part, int n)
 {
-  DEBUG("%s-%s:%s()#%d: -- %s('%s', -, %d) \n",
-                                    __NOW__,__FILE__,__FUNCTION__,__LINE__,__FUNCTION__, msg,  n);
+//  DEBUG("%s-%s:%s()#%d: -- %s('%s', -, %d) \n",
+//                                    __NOW__,__FILE__,__FUNCTION__,__LINE__,__FUNCTION__, msg,  n);
   bool retval=false;
   const char delim[] = "/";
   char* ptr;
@@ -195,8 +195,8 @@ bool split(const char *msg, char *part, int n)
     strcpy(part, ptr);
     retval = true;
   }
-  DEBUG("%s-%s:%s()#%d: --  '%s'  == %d ==> '%s'\n",
-                                      __NOW__,__FILE__,__FUNCTION__,__LINE__, msg, n, part);
+//  DEBUG("%s-%s:%s()#%d: --  '%s'  == %d ==> '%s'\n",
+//                                      __NOW__,__FILE__,__FUNCTION__,__LINE__, msg, n, part);
   return retval;
 }
 //***********************************************************************************************
@@ -516,37 +516,37 @@ bool MyLog(const char* Program, const char* Function, int Line, const char* pLog
 {
   DEBUG_p("=======> %s()#%d: %s(\"%s\")\n", __FUNCTION__, __LINE__, __FUNCTION__, pLogText);
   int status = false;
-	int count = 0;
-	#define MAXCOUNT 50
+  int count = 0;
+  #define MAXCOUNT 50
 
-  FILE* logFile = fopen(LOGFILE, "a+");		// Flags: 'O_RDWR | O_CREAT | O_APPEND'
-  
+  FILE* logFile = fopen(LOGFILE, "a+");   // Flags: 'O_RDWR | O_CREAT | O_APPEND'
+
   if(NULL == logFile)
-  {	// NULL is returned and errno is set to indicate the error.
+  { // NULL is returned and errno is set to indicate the error.
     { // --- Debug-Ausgaben ---------------------------------------------------
       char ErrText[ZEILE];
       sprintf(ErrText, "Error fopen('%s'): Error %d(%s)", LOGFILE, errno, strerror(errno));
       DEBUG_p("    ** %s **     %s()#%d: %s!\n", __FILE__, __FUNCTION__, __LINE__, ErrText);
     } // ----------------------------------------------------------------------
-  	do
-  	{	// auf Freigabe warten
-  		// -------------------
-  		usleep(50);
-  		logFile = fopen(LOGFILE, "a+");		// Flags: 'O_RDWR | O_CREAT | O_APPEND'
-  	}
-  	while ((errno == 13) && (count++ < MAXCOUNT));
+    do
+    { // auf Freigabe warten
+      // -------------------
+      usleep(50);
+      logFile = fopen(LOGFILE, "a+");   // Flags: 'O_RDWR | O_CREAT | O_APPEND'
+    }
+    while ((errno == 13) && (count++ < MAXCOUNT));
     { // --- Debug-Ausgaben ---------------------------------------------------
       char ErrText[ZEILE];
       sprintf(ErrText, "Error fopen('%s'): count=%d", LOGFILE, count);
       DEBUG_p("    ** %s **     %s()#%d: %s!\n", __FILE__, __FUNCTION__, __LINE__, ErrText);
     } // ----------------------------------------------------------------------
-	}
-  
+  }
+
   if(NULL != logFile)
   {
     char neueZeile[ZEILE];
     char aktuelleZeit[NOTIZ];
-    sprintf(neueZeile, "%s(%d) %s.%s()#%d: %s\n",     
+    sprintf(neueZeile, "%s(%d) %s.%s()#%d: %s\n",
        mkdatum(time(0), aktuelleZeit), count, Program, Function, Line, pLogText);
     { // --- Debug-Ausgaben ---------------------------------------------------
       DEBUG_p("         %s()#%d: neue Zeile: '%s'!\n",

@@ -3,10 +3,10 @@
 //* File:          version.h                                               *//
 //* Author:        Wolfgang Keuch                                          *//
 //* Creation date: 2014-03-31;                                             *//
-//* Last change:   2021-10-24 - 13:09:17            	                     *//
+//* Last change:   2021-11-16 - 16:01:42                                   *//
 //* Description:   Versions-Verwaltung                                     *//
-//*                Die 'BUILD'-Nummer wird über ein Python-Programm erhöht *//
-//* Copyright (C) 2014 by Wolfgang Keuch                                   *//
+//*                Die 'BUILD'-Nummer wird Ã¼ber ein Python-Programm erhÃ¶ht *//
+//* Copyright (C) 2014-2922 by Wolfgang Keuch                              *//
 //*                                                                        *//
 //**************************************************************************//
 
@@ -23,7 +23,7 @@ EXTERN char Version[50];
 
 #define MAXVERS 5
 #define MINVERS 0
-#define BUILD 14
+#define BUILD 15
 
 #endif //_VERSION_H
 

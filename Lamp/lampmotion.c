@@ -3,7 +3,7 @@
 //* File:          lampmotion.c                                             *//
 //* Author:        Wolfgang Keuch                                           *//
 //* Creation date: 2021-04-05;                                              *//
-//* Last change:   2021-11-07 - 10:41:55                                    *//
+//* Last change:   2021-11-15 - 15:39:54                                    *//
 //* Description:   Nistkastenprogramm - ergänzt 'fifomotion':               *//
 //*                Steuerung der Infrarot-Lampen                            *//
 //*                Verwaltung der Umwelt-Sensoren                           *//
@@ -18,7 +18,7 @@
 
 #define _MODUL0
 #define __LAMPMOTION_DEBUG__   true
-#define __LAMPMOTION_DEBUG_1__ false
+#define __LAMPMOTION_DEBUG_1__ true
 #define __LAMPMOTION_DEBUG_2__ false
 
 #include "./version.h"
@@ -54,7 +54,7 @@ static char Hostname[ZEILE];          // der Name dieses Rechners
 static char meineIPAdr[NOTIZ];        // die IP-Adresse dieses Rechners
 static char* IPnmr;                   // letzte Stelle der IP-Adresse
 static time_t ErrorFlag = 0;          // Steuerung rote LED
-static bool Automatic = false;				// Steuerung IR-Lampem
+static bool Automatic = false;        // Steuerung IR-Lampem
 
 // Message-Erwiderung
 // --------------------
@@ -178,14 +178,14 @@ int Error_NonFatal( char* Message, const char* Func, int Zeile)
 // --------------------------------------
 char* getStr(char* Quelle, char* Ziel, int pos)
 {
-  DEBUG_1(">> %s-----%s()#%d: %s('%s', '%s', %d)\n",
-                  __NOW__, __FUNCTION__, __LINE__, __FUNCTION__, Quelle, Ziel, pos);
+//  DEBUG_1(">> %s-----%s()#%d: %s('%s', '%s', %d)\n",
+//                  __NOW__, __FUNCTION__, __LINE__, __FUNCTION__, Quelle, Ziel, pos);
   char Kopie[NOTIZ];
   strcpy(Kopie, Ziel);                                     // soll Bezeichnung enthalten
   if (!split(Quelle, Ziel, pos))
     Ziel = NULL;
-  DEBUG_1(">> %s-----%s()#%d: %s[%d](%s) = \"%s\"\n",
-                   __NOW__, __FUNCTION__, __LINE__, Quelle, pos, Kopie, Ziel);
+//  DEBUG_1(">> %s-----%s()#%d: %s[%d](%s) = \"%s\"\n",
+//                   __NOW__, __FUNCTION__, __LINE__, Quelle, pos, Kopie, Ziel);
   return(Ziel);
 }
 
@@ -915,25 +915,25 @@ int main(int argc, char *argv[])
   {
     wiringPiSetup();
     pinMode (LED_gn2,   OUTPUT);
-    pinMode (LED_bl2,    OUTPUT);
-//    pinMode (LAMP_IRRIGHT, OUTPUT);
-//    pinMode (LAMP_IRLEFT,  OUTPUT);
+    pinMode (LED_bl2,    OUTPUT);    pinMode (LAMP_IRRIGHT, OUTPUT);
+    pinMode (LAMP_IRLEFT,  OUTPUT);
     #define ANZEIT  44 /* msec */
-    for (int ix=0; ix < 12; ix++)
+    for (int ix=0; ix < 96; ix++)
     {
       digitalWrite (LED_gn2,   LED_EIN);
-//      digitalWrite (LAMP_IRRIGHT, LED_HELL);
+      digitalWrite (LAMP_IRRIGHT, LED_HELL);
       delay(ANZEIT);
       digitalWrite (LED_gn2,   LED_AUS);
-//      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
+      digitalWrite (LAMP_IRRIGHT, LED_DUNKEL);
       digitalWrite (LED_bl2,    LED_EIN);
-//      digitalWrite (LAMP_IRLEFT,  LED_HELL);
+      digitalWrite (LAMP_IRLEFT,  LED_HELL);
       delay(ANZEIT);
       digitalWrite (LED_bl2,    LED_AUS);
-//      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
+      digitalWrite (LAMP_IRLEFT,  LED_DUNKEL);
     }
-//    digitalWrite (LAMP_IRRIGHT,   LED_DUNKEL);
-//    digitalWrite (LAMP_IRLEFT,    LED_DUNKEL);
+    digitalWrite (LAMP_IRRIGHT,   LED_DUNKEL);
+    digitalWrite (LAMP_IRLEFT,    LED_DUNKEL);
+
     DEBUG(">> %s()#%d @ %s ----- GPIO OK -------\n", __FUNCTION__, __LINE__, __NOW__);
     { // --- Log-Ausgabe ---------------------------------------------------------
       char LogText[ZEILE];  sprintf(LogText, "    GPIO OK !");
@@ -1307,8 +1307,8 @@ int main(int argc, char *argv[])
     }
     
     if (!Automatic)
-    {	// Handsteuerung
-    	// -------------    	
+    { // Handsteuerung
+      // -------------      
     }
     
     else if (Zeitfenster(GUTENMORGEN, GUTENACHT))
@@ -1318,12 +1318,12 @@ int main(int argc, char *argv[])
 //      digitalWrite (LAMP_IRRIGHT, LED_HELL);
 //      digitalWrite (LAMP_IRLEFT,  LED_HELL);
 //      if (((blink % (STD*4)) == 0))     // entspricht ca. 1:07 Stunden
-      	
-   		time_t tnow;
-  		time(&tnow);
-  		if ((tnow % STD) == 0)							// zur vollen Stunde
-     	
-      	
+        
+      time_t tnow;
+      time(&tnow);
+      if ((tnow % STD) == 0)              // zur vollen Stunde
+      
+        
       { // mit IR-Lampen Photo auslösen
         // ----------------------------
         DEBUG_2(">> %s-%s()#%d\n",  __NOW__, __FUNCTION__, __LINE__);
